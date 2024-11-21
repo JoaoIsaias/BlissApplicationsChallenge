@@ -1,7 +1,6 @@
-import Foundation
 import CoreData
 
-class ContentViewModel: ObservableObject {
+class MainViewModel: ObservableObject {
     private var apiClient: APIClientProtocol
     @Published var isLoading: Bool = false
     
@@ -35,4 +34,5 @@ class ContentViewModel: ObservableObject {
             }
         }
     }
+
 }
