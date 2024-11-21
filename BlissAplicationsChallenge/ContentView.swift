@@ -18,7 +18,9 @@ struct ContentView: View {
     var body: some View {
         VStack() {
             Button("Get Emojis") {
-                viewModel.loadEmojis(context: viewContext)
+                if emojiList.isEmpty {
+                    viewModel.loadEmojis(context: viewContext)
+                }
             }
             if viewModel.isLoading {
                 ProgressView()
