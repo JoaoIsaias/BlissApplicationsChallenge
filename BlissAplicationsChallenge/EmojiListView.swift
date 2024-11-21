@@ -5,7 +5,7 @@ struct EmojiListView: View {
         \.managedObjectContext
     ) var viewContext
 
-    let emojiList: [Emoji]
+    @State var emojiList: [Emoji]
     
     @StateObject private var viewModel = EmojiListViewModel()
     
@@ -13,12 +13,20 @@ struct EmojiListView: View {
         VStack() {
             ScrollView{
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 20) {
-                    ForEach(emojiList) {emoji in
-                        AsyncImage(url: URL(string: emoji.url ?? ""))
-                            .frame(width: 100, height: 100)
-                            .padding()
+                    ForEach(emojiList) { emoji in
+                        Button {
+                            emojiList = emojiList.filter { $0 != emoji }
+                        } label: {
+                            AsyncImage(url: URL(string: emoji.url ?? ""))
+                                .frame(width: 100, height: 100)
+                                .padding()
+                        }
+                        
                     }
                 }
+            }
+            .refreshable {
+                emojiList = viewModel.resetEmojisList(context: viewContext) ?? []
             }
         }
     }
