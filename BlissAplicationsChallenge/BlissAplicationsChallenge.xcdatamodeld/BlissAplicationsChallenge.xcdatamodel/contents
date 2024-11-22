@@ -16,6 +16,7 @@
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="userId"/>
+                <constraint value="login"/>
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>

@@ -59,6 +59,11 @@ struct MainView: View {
             }
             .padding()
             
+            NavigationLink(destination: AvatarListView()) {
+                Text("Avatar List")
+            }
+            .padding()
+            
             Spacer()
             
         }
