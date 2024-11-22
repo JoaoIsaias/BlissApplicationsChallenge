@@ -12,13 +12,18 @@ struct MainView: View {
     ) var emojiList: FetchedResults<Emoji>
     
     @StateObject private var viewModel = MainViewModel()
-    @State private var randomEmojiURL: String?
+    @State private var imageURL: String?
+    @State private var searchText: String = ""
     
     var body: some View {
         NavigationStack {
-            AsyncImage(url: URL(string: randomEmojiURL ?? ""))
+                AsyncImage(url: URL(string: imageURL ?? "")){ result in
+                    result.image?
+                        .resizable()
+                        .scaledToFill()
+                }
                 .frame(width: 100, height: 100)
-                .opacity(emojiList.isEmpty ? 0 : 1)
+                .border(.blue)
                 .padding()
             
             if emojiList.isEmpty {
@@ -39,6 +44,21 @@ struct MainView: View {
             .disabled(emojiList.isEmpty)
             .padding()
             
+            HStack {
+                TextField("", text: $searchText)
+                    .border(.black)
+                    .padding(.horizontal)
+                Button("Search") {
+                    if !searchText.isEmpty {
+                        Task {
+                            await showUserAvatar()
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .padding()
+            
             Spacer()
             
         }
@@ -46,8 +66,15 @@ struct MainView: View {
     }
     
     func showRandomEmoji() {
-        randomEmojiURL = emojiList.randomElement()?.url
-        
+        imageURL = emojiList.randomElement()?.url
+    }
+    
+    func showUserAvatar() async {
+        await viewModel.getUserInfo(context: viewContext, username: searchText.lowercased()) { userInfo in
+            if userInfo != nil {
+                imageURL = userInfo?.avatarUrl
+            }
+        }
     }
 }
 
