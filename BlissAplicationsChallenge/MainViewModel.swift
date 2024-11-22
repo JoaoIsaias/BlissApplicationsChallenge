@@ -2,22 +2,17 @@ import CoreData
 
 class MainViewModel: ObservableObject {
     private var apiClient: APIClientProtocol
-    @Published var isLoading: Bool = false
     
     init() {
         self.apiClient = APIClient()
     }
     
     func loadEmojis(context: NSManagedObjectContext) {
-        self.isLoading = true
-
         apiClient.request("https://api.github.com/emojis", method: .get, parameters: nil)
-        { [weak self] (result: Result<[String: String]?, Error>) in
-            guard let self = self else { return }
-            self.isLoading = false
+        { (result: Result<[String: String]?, Error>) in
             switch result {
             case .success(let data):
-                data?.forEach({emoji in
+                data?.forEach({ emoji in
                     let newEmoji = Emoji(context: context)
                     newEmoji.name = emoji.key
                     newEmoji.url = emoji.value
@@ -33,6 +28,51 @@ class MainViewModel: ObservableObject {
                 print("Error occurred: \(error)")
             }
         }
+    }
+    
+    func getUserInfo(context: NSManagedObjectContext, username: String, completion: @escaping (User?) -> Void) async {
+        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        
+        fetchRequest.predicate = NSPredicate(format: "login == %@", username)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \User.login, ascending: true)]
+        
+        do {
+            let fetchedUserArray = try context.fetch(fetchRequest)
+            if let foundUser = fetchedUserArray.first,
+                foundUser.login == username {
+                print("username \(username) found in CoreData")
+                completion(foundUser)
+            } else {
+                print("username \(username) not found in CoreData, will do online request")
+                
+                apiClient.request("https://api.github.com/users/\(username)", method: .get, parameters: nil)
+                { (result: Result<UserDTO?, Error>) in
+                    switch result {
+                    case .success(let data):
+                        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+                        let newUser = User(context: context)
+
+                        newUser.login = data?.login?.lowercased()
+                        newUser.userId = data?.userId ?? 0
+                        newUser.avatarUrl = data?.avatarUrl
+                        
+                        do {
+                            print("trying to save on coreData")
+                            try context.save()
+                        } catch {
+                            print("Error occurred: \(error)")
+                            context.rollback()
+                        }
+                        completion(newUser)
+                    case .failure(let error):
+                        print("Error occurred: \(error)")
+                    }
+                }
+            }
+        } catch {
+            print("Failed to fetch items: \(error.localizedDescription)")
+        }
+        completion(nil)
     }
 
 }

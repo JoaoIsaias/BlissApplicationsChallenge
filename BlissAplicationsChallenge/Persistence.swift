@@ -1,5 +1,3 @@
-//
-
 import CoreData
 
 struct PersistenceController {
