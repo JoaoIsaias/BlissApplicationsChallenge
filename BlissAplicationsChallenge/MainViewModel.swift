@@ -40,10 +40,10 @@ class MainViewModel: ObservableObject {
             let fetchedUserArray = try context.fetch(fetchRequest)
             if let foundUser = fetchedUserArray.first,
                 foundUser.login == username {
-                print("username \(username) found in CoreData")
+                print("Username \(username) found in CoreData")
                 completion(foundUser)
             } else {
-                print("username \(username) not found in CoreData, will do online request")
+                print("Username \(username) not found in CoreData, will try API request")
                 
                 apiClient.request("https://api.github.com/users/\(username)", method: .get, parameters: nil)
                 { (result: Result<UserDTO?, Error>) in
@@ -57,7 +57,7 @@ class MainViewModel: ObservableObject {
                         newUser.avatarUrl = data?.avatarUrl
                         
                         do {
-                            print("trying to save on coreData")
+                            print("Trying to save on coreData")
                             try context.save()
                         } catch {
                             print("Error occurred: \(error)")
